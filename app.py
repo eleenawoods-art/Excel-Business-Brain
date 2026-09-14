@@ -388,3 +388,17 @@ with tabs[3]:
         "Coming next: automatic KPI dashboard, AI insights, "
         "anomaly detection, forecasting and PDF business reports."
     )
+st.divider()
+
+st.subheader("📊 Advanced Business Analysis")
+
+st.write(
+    "Use the Business Dashboard page for automatic "
+    "KPIs, revenue analysis, insights and Why? explanations."
+)
+
+if st.button("Open Business Dashboard"):
+
+    st.switch_page(
+        "pages/business_dashboard.py"
+    )
