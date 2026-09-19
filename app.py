@@ -5,7 +5,10 @@ import pandas as pd
 from core.workbook_reader import analyze_workbook, build_workbook_bytes
 from core.data_cleaner import analyze_data_health, clean_dataframe
 from core.formula_analyzer import analyze_formulas, apply_safe_formula_fixes
-
+from core.business_report import (
+    build_business_report_pdf,
+    build_business_summary_xlsx,
+)
 st.set_page_config(
     page_title="Excel Business Brain",
     page_icon="🧠",
