@@ -347,32 +347,31 @@ with tabs[2]:
             f"Applied {fix_count} safe formula fix(es)."
         )
 
-# --------------------------------------------------
-# EXPORT
-# --------------------------------------------------
+# ============================================================
+# REPLACE THE CURRENT EXPORT TAB BLOCK WITH THIS
+# ============================================================
+
+# Add this import near the top of app.py:
+#
+# from core.business_report import build_business_report_pdf, build_business_summary_xlsx
 
 with tabs[3]:
-
     st.subheader("Export")
-
-    export_book = (
-        st.session_state.cleaned
-        or workbook
+    st.caption(
+        "Download the analyzed workbook, an executive Excel summary, "
+        "or a professional PDF business report."
     )
 
-    st.write(
-        "Download the original workbook or the "
-        "version produced by the safe cleaning/fix actions."
-    )
+    export_book = st.session_state.cleaned or workbook
 
-    output = build_workbook_bytes(
-        export_book
-    )
+    base = st.session_state.filename.rsplit(".", 1)[0]
 
-    base = st.session_state.filename.rsplit(
-        ".",
-        1
-    )[0]
+    # --------------------------------------------------------
+    # 1. Full Excel workbook
+    # --------------------------------------------------------
+    st.markdown("### 📥 Workbook Export")
+
+    output = build_workbook_bytes(export_book)
 
     st.download_button(
         "📥 Download Excel Workbook",
@@ -382,26 +381,73 @@ with tabs[3]:
             "application/vnd.openxmlformats-officedocument."
             "spreadsheetml.sheet"
         ),
-        type="primary"
+        type="primary",
+        use_container_width=True,
     )
 
     st.divider()
 
-    st.caption(
-        "Coming next: automatic KPI dashboard, AI insights, "
-        "anomaly detection, forecasting and PDF business reports."
+    # --------------------------------------------------------
+    # 2. Executive Excel Summary
+    # --------------------------------------------------------
+    st.markdown("### 📊 Executive Excel Summary")
+    st.write(
+        "Creates a separate business summary workbook with KPIs, "
+        "data quality, detected business structure, insights and "
+        "workbook-level information."
     )
-st.divider()
 
-st.subheader("📊 Advanced Business Analysis")
-
-st.write(
-    "Use the Business Dashboard page for automatic "
-    "KPIs, revenue analysis, insights and Why? explanations."
-)
-
-if st.button("Open Business Dashboard"):
-
-    st.switch_page(
-        "pages/business_dashboard.py"
+    summary_xlsx = build_business_summary_xlsx(
+        export_book,
+        filename=st.session_state.filename,
     )
+
+    st.download_button(
+        "📊 Download Business Summary (Excel)",
+        data=summary_xlsx,
+        file_name=f"{base}_business_summary.xlsx",
+        mime=(
+            "application/vnd.openxmlformats-officedocument."
+            "spreadsheetml.sheet"
+        ),
+        use_container_width=True,
+    )
+
+    st.divider()
+
+    # --------------------------------------------------------
+    # 3. Executive PDF Business Report
+    # --------------------------------------------------------
+    st.markdown("### 📄 Executive PDF Report")
+    st.write(
+        "Creates a client-ready PDF containing business KPIs, "
+        "data-quality results, detected structure and automatic insights."
+    )
+
+    try:
+        pdf_report = build_business_report_pdf(
+            export_book,
+            filename=st.session_state.filename,
+        )
+
+        st.download_button(
+            "📄 Download Business Report (PDF)",
+            data=pdf_report,
+            file_name=f"{base}_business_report.pdf",
+            mime="application/pdf",
+            use_container_width=True,
+        )
+
+    except Exception as exc:
+        st.error(
+            "The PDF report could not be generated. "
+            f"Details: {exc}"
+        )
+
+    st.divider()
+
+    st.info(
+        "💡 Tip: Run Safe Data Cleaning or Safe Formula Fixes first, "
+        "then download the exports to include the cleaned workbook."
+    )
+
