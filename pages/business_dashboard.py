@@ -819,39 +819,68 @@ preview_max = min(
     max(10, len(df)),
 )
 
-preview_limit = st.slider(
-    "Rows to preview",
-    min_value=10,
-    max_value=preview_max,
-    value=min(100, preview_max),
-    step=10,
-)
-
-st.dataframe(
-    df.head(preview_limit),
-    use_container_width=True,
-    hide_index=True,
-)
-
-csv_data = df.to_csv(
-    index=False
-).encode("utf-8")
-
-st.download_button(
-    "⬇️ Download Current Sheet as CSV",
-    data=csv_data,
-    file_name=f"{selected_sheet}_business_data.csv",
-    mime="text/csv",
-)
-
+```python
 # ---------------------------------------------------------
-# FOOTER
+# 📋 Data Preview
 # ---------------------------------------------------------
+st.markdown("### 📋 Data Preview")
 
-st.divider()
+try:
+    preview_df = None
 
-st.caption(
-    "Excel Business Brain • Automated KPIs, trends, "
-    "performance analysis, profitability checks, "
-    "insights and business recommendations."
-)
+    # Prefer the main/first dataframe from the analyzed workbook
+    if isinstance(workbook_data, dict):
+        for value in workbook_data.values():
+            if isinstance(value, pd.DataFrame) and not value.empty:
+                preview_df = value
+                break
+
+    # Fallback to workbook/session data when available
+    if preview_df is None:
+        if "dataframe" in st.session_state and isinstance(
+            st.session_state.dataframe, pd.DataFrame
+        ):
+            preview_df = st.session_state.dataframe
+
+    if preview_df is not None and not preview_df.empty:
+        total_preview_rows = len(preview_df)
+
+        # Keep slider values valid for every workbook size.
+        # At least 1 row is always allowed.
+        slider_max = max(1, min(total_preview_rows, 100))
+        slider_min = 1
+
+        # Step must also be valid when only one row is available.
+        slider_step = 1 if slider_max < 10 else 10
+
+        default_value = min(20, slider_max)
+        if default_value < slider_min:
+            default_value = slider_min
+
+        preview_limit = st.slider(
+            "Rows to preview",
+            min_value=slider_min,
+            max_value=slider_max,
+            value=default_value,
+            step=slider_step,
+            key="data_preview_limit",
+        )
+
+        st.dataframe(
+            preview_df.head(preview_limit),
+            use_container_width=True,
+            hide_index=True,
+        )
+
+        st.caption(
+            f"Showing {min(preview_limit, total_preview_rows)} "
+            f"of {total_preview_rows:,} rows."
+        )
+
+    else:
+        st.info("No tabular data is available for preview.")
+
+except Exception as preview_error:
+    st.warning(f"Data preview could not be displayed: {preview_error}")
+```
+
